@@ -1,5 +1,6 @@
 import { Radar, BarChart3, Brain, Target, Compass, Tag, Settings, LogOut } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const navItems = [
   { icon: BarChart3, label: "Trending", path: "/dashboard" },
@@ -11,6 +12,13 @@ const navItems = [
 
 const DashboardSidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   return (
     <aside className="w-60 border-r border-border bg-card min-h-screen flex flex-col">
@@ -23,7 +31,7 @@ const DashboardSidebar = () => {
 
       <nav className="flex-1 p-3 space-y-1">
         {navItems.map((item) => {
-          const isActive = location.pathname === item.path || (item.path === "/dashboard" && location.pathname === "/dashboard");
+          const isActive = location.pathname === item.path;
           return (
             <Link
               key={item.path}
@@ -46,10 +54,13 @@ const DashboardSidebar = () => {
           <Settings className="w-4 h-4" />
           Settings
         </button>
-        <Link to="/" className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary w-full transition-colors">
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary w-full transition-colors"
+        >
           <LogOut className="w-4 h-4" />
           Log out
-        </Link>
+        </button>
       </div>
     </aside>
   );
