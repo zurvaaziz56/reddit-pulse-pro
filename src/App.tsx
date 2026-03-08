@@ -18,6 +18,7 @@ import OpportunitiesPage from "./pages/dashboard/OpportunitiesPage";
 import KeywordsPage from "./pages/dashboard/KeywordsPage";
 import SettingsPage from "./pages/dashboard/SettingsPage";
 import ContentIdeasPage from "./pages/dashboard/ContentIdeasPage";
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
