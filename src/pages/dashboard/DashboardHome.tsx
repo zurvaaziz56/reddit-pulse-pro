@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import TrendingPostsPanel from "@/components/dashboard/TrendingPostsPanel";
 import InsightsPanel from "@/components/dashboard/InsightsPanel";
 import SubredditChart from "@/components/dashboard/SubredditChart";
+import UsageBanner from "@/components/dashboard/UsageBanner";
 
 const DashboardHome = () => {
   const [fetching, setFetching] = useState(false);
@@ -81,6 +82,8 @@ const DashboardHome = () => {
           </Button>
         </div>
       </div>
+
+      <UsageBanner />
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
