@@ -2,8 +2,8 @@ import { AlertTriangle, Loader2 } from "lucide-react";
 import { useInsights } from "@/hooks/use-dashboard-data";
 import { painPoints as mockPainPoints } from "@/lib/mockData";
 
-const PainPointsPanel = () => {
-  const { data: insights, isLoading } = useInsights("pain_point");
+const PainPointsPanel = ({ keywordId }: { keywordId?: string }) => {
+  const { data: insights, isLoading } = useInsights("pain_point", keywordId);
   const hasData = insights && insights.length > 0;
 
   if (isLoading) {

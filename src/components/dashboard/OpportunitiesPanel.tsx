@@ -2,8 +2,8 @@ import { Compass, Loader2 } from "lucide-react";
 import { useInsights } from "@/hooks/use-dashboard-data";
 import { opportunities as mockOpps } from "@/lib/mockData";
 
-const OpportunitiesPanel = () => {
-  const { data: insights, isLoading } = useInsights("opportunity");
+const OpportunitiesPanel = ({ keywordId }: { keywordId?: string }) => {
+  const { data: insights, isLoading } = useInsights("opportunity", keywordId);
   const hasData = insights && insights.length > 0;
 
   if (isLoading) {

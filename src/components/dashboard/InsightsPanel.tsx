@@ -2,8 +2,8 @@ import { Brain, Lightbulb, Loader2 } from "lucide-react";
 import { useInsights } from "@/hooks/use-dashboard-data";
 import { aiInsights as mockInsights } from "@/lib/mockData";
 
-const InsightsPanel = () => {
-  const { data: insights, isLoading } = useInsights("trend");
+const InsightsPanel = ({ keywordId }: { keywordId?: string }) => {
+  const { data: insights, isLoading } = useInsights("trend", keywordId);
   const hasData = insights && insights.length > 0;
 
   if (isLoading) {
