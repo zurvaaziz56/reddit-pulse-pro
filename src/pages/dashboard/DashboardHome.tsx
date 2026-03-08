@@ -11,8 +11,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import TrendingPostsPanel from "@/components/dashboard/TrendingPostsPanel";
 import InsightsPanel from "@/components/dashboard/InsightsPanel";
 import SubredditChart from "@/components/dashboard/SubredditChart";
-import InsightsPanel from "@/components/dashboard/InsightsPanel";
-import SubredditChart from "@/components/dashboard/SubredditChart";
 
 const DashboardHome = () => {
   const [fetching, setFetching] = useState(false);
