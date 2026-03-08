@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { RefreshCw, Loader2, BarChart3, Tag, Brain, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useKeywords, useRedditPosts, useInsights } from "@/hooks/use-dashboard-data";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { useSearchParams } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import TrendingPostsPanel from "@/components/dashboard/TrendingPostsPanel";
 import InsightsPanel from "@/components/dashboard/InsightsPanel";
 import SubredditChart from "@/components/dashboard/SubredditChart";
@@ -18,6 +20,22 @@ const DashboardHome = () => {
   const { data: insights = [] } = useInsights();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { refreshSubscription } = useAuth();
+
+  useEffect(() => {
+    const checkout = searchParams.get("checkout");
+    if (checkout === "success") {
+      toast({ title: "🎉 Subscription activated!", description: "Your plan has been upgraded successfully." });
+      refreshSubscription();
+      searchParams.delete("checkout");
+      setSearchParams(searchParams, { replace: true });
+    } else if (checkout === "cancelled") {
+      toast({ title: "Checkout cancelled", description: "No changes were made to your plan." });
+      searchParams.delete("checkout");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, []);
 
   const handleFetchReddit = async () => {
     setFetching(true);
