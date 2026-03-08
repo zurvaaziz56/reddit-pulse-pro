@@ -13,7 +13,7 @@ const navItems = [
 const DashboardSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
 
   const handleLogout = async () => {
     await signOut();
@@ -50,10 +50,20 @@ const DashboardSidebar = () => {
       </nav>
 
       <div className="p-3 border-t border-border space-y-1">
-        <button className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary w-full transition-colors">
+        <div className="px-3 py-2 mb-2">
+          <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+        </div>
+        <Link
+          to="/dashboard/settings"
+          className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+            location.pathname === "/dashboard/settings"
+              ? "bg-primary/10 text-primary"
+              : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+          } w-full`}
+        >
           <Settings className="w-4 h-4" />
           Settings
-        </button>
+        </Link>
         <button
           onClick={handleLogout}
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary w-full transition-colors"
