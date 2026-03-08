@@ -17,6 +17,7 @@ import PainPointsPage from "./pages/dashboard/PainPointsPage";
 import OpportunitiesPage from "./pages/dashboard/OpportunitiesPage";
 import KeywordsPage from "./pages/dashboard/KeywordsPage";
 import SettingsPage from "./pages/dashboard/SettingsPage";
+import ContentIdeasPage from "./pages/dashboard/ContentIdeasPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="painpoints" element={<PainPointsPage />} />
               <Route path="opportunities" element={<OpportunitiesPage />} />
               <Route path="keywords" element={<KeywordsPage />} />
+              <Route path="content-ideas" element={<ContentIdeasPage />} />
               <Route path="settings" element={<SettingsPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />

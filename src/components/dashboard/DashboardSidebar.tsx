@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Radar, BarChart3, Brain, Target, Compass, Tag, Settings, LogOut, Menu, X } from "lucide-react";
+import { Radar, BarChart3, Brain, Target, Compass, Tag, Settings, LogOut, Menu, X, Lightbulb } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { STRIPE_TIERS } from "@/lib/stripe-tiers";
@@ -12,6 +12,7 @@ const navItems = [
   { icon: Brain, label: "AI Insights", path: "/dashboard/insights" },
   { icon: Target, label: "Pain Points", path: "/dashboard/painpoints" },
   { icon: Compass, label: "Opportunities", path: "/dashboard/opportunities" },
+  { icon: Lightbulb, label: "Content Ideas", path: "/dashboard/content-ideas" },
   { icon: Tag, label: "Keywords", path: "/dashboard/keywords" },
 ];
 
