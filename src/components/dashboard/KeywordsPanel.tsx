@@ -1,37 +1,78 @@
 import { useState } from "react";
-import { Plus, TrendingUp, TrendingDown, Minus, X, Tag } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, Minus, X, Tag, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { keywords as initialKeywords } from "@/lib/mockData";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
-const trendIcons = {
-  up: <TrendingUp className="w-3.5 h-3.5 text-success" />,
-  down: <TrendingDown className="w-3.5 h-3.5 text-destructive" />,
-  stable: <Minus className="w-3.5 h-3.5 text-muted-foreground" />,
-};
+const PLAN_LIMITS: Record<string, number> = { starter: 3, pro: 10, agency: 50 };
 
 const KeywordsPanel = () => {
-  const [keywords, setKeywords] = useState(initialKeywords);
   const [newKeyword, setNewKeyword] = useState("");
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const { data: profile } = useQuery({
+    queryKey: ["profile", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("plan").eq("user_id", user!.id).single();
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const { data: keywords = [], isLoading } = useQuery({
+    queryKey: ["keywords", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("keywords").select("*").order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const addMutation = useMutation({
+    mutationFn: async (keyword: string) => {
+      const limit = PLAN_LIMITS[profile?.plan ?? "starter"] ?? 3;
+      if (keywords.length >= limit) {
+        throw new Error(`You've reached the ${limit} keyword limit on your ${profile?.plan ?? "starter"} plan. Upgrade to add more.`);
+      }
+      const { error } = await supabase.from("keywords").insert({ keyword, user_id: user!.id });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["keywords"] });
+      setNewKeyword("");
+    },
+    onError: (err: Error) => {
+      toast({ title: "Cannot add keyword", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("keywords").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["keywords"] }),
+  });
 
   const addKeyword = () => {
     if (!newKeyword.trim()) return;
-    setKeywords([
-      ...keywords,
-      { id: Date.now().toString(), keyword: newKeyword.trim(), posts: 0, trend: "stable" as const },
-    ]);
-    setNewKeyword("");
+    addMutation.mutate(newKeyword.trim());
   };
 
-  const removeKeyword = (id: string) => {
-    setKeywords(keywords.filter((k) => k.id !== id));
-  };
+  const limit = PLAN_LIMITS[profile?.plan ?? "starter"] ?? 3;
 
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
         <Tag className="w-5 h-5 text-primary" />
         <h2 className="text-xl font-bold">Keywords</h2>
+        <span className="text-xs text-muted-foreground ml-auto">{keywords.length}/{limit} monitors</span>
       </div>
 
       <div className="flex gap-2">
@@ -42,28 +83,36 @@ const KeywordsPanel = () => {
           onKeyDown={(e) => e.key === "Enter" && addKeyword()}
           className="flex-1"
         />
-        <Button variant="hero" size="default" onClick={addKeyword}>
-          <Plus className="w-4 h-4" />
+        <Button variant="hero" size="default" onClick={addKeyword} disabled={addMutation.isPending}>
+          {addMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
           Add
         </Button>
       </div>
 
-      <div className="space-y-2">
-        {keywords.map((kw) => (
-          <div key={kw.id} className="p-4 rounded-xl bg-card border border-border flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="font-medium text-sm">{kw.keyword}</span>
-              <span className="text-xs text-muted-foreground">{kw.posts.toLocaleString()} posts</span>
-            </div>
-            <div className="flex items-center gap-3">
-              {trendIcons[kw.trend]}
-              <button onClick={() => removeKeyword(kw.id)} className="text-muted-foreground hover:text-destructive transition-colors">
+      {isLoading ? (
+        <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
+      ) : keywords.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground text-sm">No keywords yet. Add one above to start tracking.</div>
+      ) : (
+        <div className="space-y-2">
+          {keywords.map((kw) => (
+            <div key={kw.id} className="p-4 rounded-xl bg-card border border-border flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="font-medium text-sm">{kw.keyword}</span>
+                <span className="text-xs text-muted-foreground">
+                  Added {new Date(kw.created_at).toLocaleDateString()}
+                </span>
+              </div>
+              <button
+                onClick={() => deleteMutation.mutate(kw.id)}
+                className="text-muted-foreground hover:text-destructive transition-colors"
+              >
                 <X className="w-4 h-4" />
               </button>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

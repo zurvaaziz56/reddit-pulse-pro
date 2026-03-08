@@ -1,1 +1,7 @@
 project_id = "jjecdtrwjdevudqahikx"
+
+[functions.fetch-reddit]
+verify_jwt = false
+
+[functions.generate-insights]
+verify_jwt = false
