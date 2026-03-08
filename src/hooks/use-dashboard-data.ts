@@ -30,7 +30,7 @@ export const useRedditPosts = (keywordId?: string) => {
   });
 };
 
-export const useInsights = (type?: string, keywordId?: string) => {
+export const useInsights = (type?: "trend" | "pain_point" | "opportunity" | "content_idea", keywordId?: string) => {
   const { user } = useAuth();
   return useQuery({
     queryKey: ["insights", user?.id, type, keywordId],
