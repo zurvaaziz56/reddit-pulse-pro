@@ -1,16 +1,17 @@
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { User, Mail, CreditCard, Shield } from "lucide-react";
-
-const PLAN_DETAILS: Record<string, { name: string; keywords: number; price: string }> = {
-  starter: { name: "Starter", keywords: 3, price: "$19/mo" },
-  pro: { name: "Pro", keywords: 10, price: "$49/mo" },
-  agency: { name: "Agency", keywords: 50, price: "$149/mo" },
-};
+import { STRIPE_TIERS } from "@/lib/stripe-tiers";
+import { User, CreditCard, Loader2, ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 const SettingsPage = () => {
-  const { user } = useAuth();
+  const { user, plan, subscribed, subscriptionEnd, refreshSubscription } = useAuth();
+  const { toast } = useToast();
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+  const [portalLoading, setPortalLoading] = useState(false);
 
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
@@ -30,7 +31,35 @@ const SettingsPage = () => {
     enabled: !!user,
   });
 
-  const plan = PLAN_DETAILS[profile?.plan ?? "starter"] ?? PLAN_DETAILS.starter;
+  const tier = STRIPE_TIERS[plan] ?? STRIPE_TIERS.starter;
+
+  const handleCheckout = async (priceId: string, planKey: string) => {
+    setCheckoutLoading(planKey);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: { priceId },
+      });
+      if (error) throw error;
+      if (data?.url) window.open(data.url, "_blank");
+    } catch (err: any) {
+      toast({ title: "Checkout failed", description: err.message, variant: "destructive" });
+    } finally {
+      setCheckoutLoading(null);
+    }
+  };
+
+  const handlePortal = async () => {
+    setPortalLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("customer-portal");
+      if (error) throw error;
+      if (data?.url) window.open(data.url, "_blank");
+    } catch (err: any) {
+      toast({ title: "Portal error", description: err.message, variant: "destructive" });
+    } finally {
+      setPortalLoading(false);
+    }
+  };
 
   return (
     <div className="max-w-2xl space-y-8">
@@ -70,16 +99,49 @@ const SettingsPage = () => {
         <div className="grid gap-3 text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">Current Plan</span>
-            <span className="font-medium text-primary">{plan.name}</span>
+            <span className="font-medium text-primary">{tier.name}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Price</span>
-            <span>{plan.price}</span>
+            <span>{tier.price}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Keywords Used</span>
-            <span>{keywords.length} / {plan.keywords}</span>
+            <span>{keywords.length} / {tier.keywords}</span>
           </div>
+          {subscriptionEnd && (
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Renews On</span>
+              <span>{new Date(subscriptionEnd).toLocaleDateString()}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="pt-4 flex flex-wrap gap-3">
+          {subscribed ? (
+            <Button variant="hero-outline" onClick={handlePortal} disabled={portalLoading}>
+              {portalLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <ExternalLink className="w-4 h-4 mr-2" />}
+              Manage Subscription
+            </Button>
+          ) : (
+            <>
+              {plan !== "pro" && (
+                <Button variant="hero" onClick={() => handleCheckout(STRIPE_TIERS.pro.price_id, "pro")} disabled={!!checkoutLoading}>
+                  {checkoutLoading === "pro" ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                  Upgrade to Pro — $49/mo
+                </Button>
+              )}
+              {plan !== "agency" && (
+                <Button variant="hero-outline" onClick={() => handleCheckout(STRIPE_TIERS.agency.price_id, "agency")} disabled={!!checkoutLoading}>
+                  {checkoutLoading === "agency" ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                  Upgrade to Agency — $149/mo
+                </Button>
+              )}
+            </>
+          )}
+          <Button variant="ghost" size="sm" onClick={refreshSubscription} className="ml-auto text-xs text-muted-foreground">
+            Refresh status
+          </Button>
         </div>
       </div>
     </div>
