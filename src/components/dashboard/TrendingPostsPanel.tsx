@@ -1,9 +1,9 @@
 import { ArrowUpRight, MessageSquare, ThumbsUp, TrendingUp, Loader2 } from "lucide-react";
 import { useRedditPosts } from "@/hooks/use-dashboard-data";
-import { trendingPosts as mockPosts } from "@/lib/mockData";
 
-const TrendingPostsPanel = () => {
-  const { data: posts, isLoading } = useRedditPosts();
+
+const TrendingPostsPanel = ({ keywordId }: { keywordId?: string }) => {
+  const { data: posts, isLoading, error, refetch } = useRedditPosts(keywordId);
   const hasPosts = posts && posts.length > 0;
 
   if (isLoading) {
@@ -14,6 +14,9 @@ const TrendingPostsPanel = () => {
       </div>
     );
   }
+
+  if (error) return <div role="alert">Could not load posts. <button className="underline" onClick={() => refetch()}>Try again</button></div>;
+  if (!hasPosts) return <p className="text-muted-foreground">No posts yet. Fetch posts for this keyword to get started.</p>;
 
   const displayPosts = hasPosts
     ? posts.map((p) => ({
@@ -26,14 +29,14 @@ const TrendingPostsPanel = () => {
         timestamp: getTimeAgo(p.created_utc),
         growth: "",
       }))
-    : mockPosts;
+    : [];
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold">Trending Posts</h2>
         <span className="text-sm text-muted-foreground">
-          {hasPosts ? `${posts.length} posts` : "Sample data"}
+          {hasPosts ? `${posts.length} posts` : "No posts"}
         </span>
       </div>
 

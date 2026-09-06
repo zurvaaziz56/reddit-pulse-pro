@@ -1,6 +1,6 @@
 import { Loader2 } from "lucide-react";
 import { useRedditPosts } from "@/hooks/use-dashboard-data";
-import { subredditData as mockData } from "@/lib/mockData";
+
 
 const SubredditChart = () => {
   const { data: posts, isLoading } = useRedditPosts();
@@ -29,14 +29,14 @@ const SubredditChart = () => {
         .map(([name, posts]) => ({ name, posts }))
         .sort((a, b) => b.posts - a.posts)
         .slice(0, 8)
-    : mockData.map((s) => ({ name: s.name, posts: s.posts }));
+    : [];
 
   const maxPosts = Math.max(...chartData.map((s) => s.posts), 1);
 
   return (
     <div className="p-5 rounded-xl bg-card border border-border">
       <h3 className="font-semibold mb-4">Top Subreddits</h3>
-      {!hasPosts && <p className="text-xs text-muted-foreground mb-3">Sample data</p>}
+      {!hasPosts && <p className="text-xs text-muted-foreground mb-3">No posts yet</p>}
       <div className="space-y-3">
         {chartData.map((sub) => (
           <div key={sub.name} className="space-y-1">

@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { billingEnabled } from "@/lib/function-error";
 import type { PlanKey } from "@/lib/stripe-tiers";
 
 interface AuthContextType {
@@ -28,6 +30,7 @@ const AuthContext = createContext<AuthContextType>({
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -36,6 +39,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
 
   const refreshSubscription = useCallback(async () => {
+    if (!billingEnabled) return;
     try {
       const { data: { session: currentSession } } = await supabase.auth.getSession();
       if (!currentSession) return;
@@ -72,7 +76,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Check subscription on login & periodically
   useEffect(() => {
-    if (!user) return;
+    if (!user || !billingEnabled) return;
     refreshSubscription();
     const interval = setInterval(refreshSubscription, 60_000);
     return () => clearInterval(interval);
@@ -80,6 +84,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    queryClient.clear();
     setPlan("starter");
     setSubscribed(false);
     setSubscriptionEnd(null);

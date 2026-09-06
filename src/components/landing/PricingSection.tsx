@@ -1,3 +1,4 @@
+import { billingEnabled, functionError } from "@/lib/function-error";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Check, Loader2 } from "lucide-react";
@@ -60,13 +61,14 @@ const PricingSection = () => {
       });
       if (error) throw error;
       if (data?.url) window.open(data.url, "_blank");
-    } catch (err: any) {
-      toast({ title: "Checkout failed", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "Checkout failed", description: await functionError(err), variant: "destructive" });
     } finally {
       setLoading(null);
     }
   };
 
+  if (!billingEnabled) return null;
   return (
     <section className="py-24 border-t border-border">
       <div className="container px-4">

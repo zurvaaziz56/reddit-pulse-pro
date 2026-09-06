@@ -8,11 +8,7 @@ const FooterSection = () => {
           <Radar className="w-4 h-4" />
           <span className="text-sm">© 2026 Reddit Trend Radar</span>
         </div>
-        <div className="flex gap-6 text-sm text-muted-foreground">
-          <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
-          <a href="#" className="hover:text-foreground transition-colors">Terms</a>
-          <a href="#" className="hover:text-foreground transition-colors">Contact</a>
-        </div>
+
       </div>
     </footer>
   );

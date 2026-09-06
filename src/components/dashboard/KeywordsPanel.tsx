@@ -11,7 +11,7 @@ const PLAN_LIMITS: Record<string, number> = { starter: 3, pro: 10, agency: 50 };
 
 const KeywordsPanel = () => {
   const [newKeyword, setNewKeyword] = useState("");
-  const { user } = useAuth();
+  const { user, plan } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -24,7 +24,7 @@ const KeywordsPanel = () => {
     enabled: !!user,
   });
 
-  const { data: keywords = [], isLoading } = useQuery({
+  const { data: keywords = [], isLoading, error: loadError } = useQuery({
     queryKey: ["keywords", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase.from("keywords").select("*").order("created_at", { ascending: false });
@@ -36,10 +36,11 @@ const KeywordsPanel = () => {
 
   const addMutation = useMutation({
     mutationFn: async (keyword: string) => {
-      const limit = PLAN_LIMITS[profile?.plan ?? "starter"] ?? 3;
+      const limit = PLAN_LIMITS[plan] ?? 3;
       if (keywords.length >= limit) {
-        throw new Error(`You've reached the ${limit} keyword limit on your ${profile?.plan ?? "starter"} plan. Upgrade to add more.`);
+        throw new Error(`You've reached the ${limit} keyword limit on your ${plan} plan. Upgrade to add more.`);
       }
+      if (keyword.length < 2 || keyword.length > 100) throw new Error("Use 2–100 characters for a keyword.");
       const { error } = await supabase.from("keywords").insert({ keyword, user_id: user!.id });
       if (error) throw error;
     },
@@ -57,7 +58,8 @@ const KeywordsPanel = () => {
       const { error } = await supabase.from("keywords").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["keywords"] }),
+    onSuccess: () => { queryClient.invalidateQueries(); },
+    onError: (err: Error) => toast({ title: "Could not delete keyword", description: err.message, variant: "destructive" }),
   });
 
   const addKeyword = () => {
@@ -65,7 +67,7 @@ const KeywordsPanel = () => {
     addMutation.mutate(newKeyword.trim());
   };
 
-  const limit = PLAN_LIMITS[profile?.plan ?? "starter"] ?? 3;
+  const limit = PLAN_LIMITS[plan] ?? 3;
 
   return (
     <div className="space-y-4">
@@ -77,6 +79,8 @@ const KeywordsPanel = () => {
 
       <div className="flex gap-2">
         <Input
+          aria-label="Keyword to track"
+          maxLength={100}
           placeholder="Add a keyword to track..."
           value={newKeyword}
           onChange={(e) => setNewKeyword(e.target.value)}
@@ -89,7 +93,7 @@ const KeywordsPanel = () => {
         </Button>
       </div>
 
-      {isLoading ? (
+      {loadError ? <p role="alert">Could not load keywords. Please refresh.</p> : isLoading ? (
         <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
       ) : keywords.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground text-sm">No keywords yet. Add one above to start tracking.</div>
@@ -104,6 +108,8 @@ const KeywordsPanel = () => {
                 </span>
               </div>
               <button
+                aria-label={`Delete ${kw.keyword}`}
+                disabled={deleteMutation.isPending}
                 onClick={() => deleteMutation.mutate(kw.id)}
                 className="text-muted-foreground hover:text-destructive transition-colors"
               >

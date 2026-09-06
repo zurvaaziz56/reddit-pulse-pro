@@ -1,3 +1,4 @@
+import { isConfigured } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -22,7 +23,7 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => (
+const App = () => !isConfigured ? <main className="min-h-screen grid place-content-center p-8"><h1 className="text-2xl font-bold">App setup required</h1><p>Configure the Supabase connection before using this deployment.</p></main> : (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />

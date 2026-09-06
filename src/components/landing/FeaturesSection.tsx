@@ -51,7 +51,7 @@ const FeaturesSection = () => {
         </motion.div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {features.map((feature, i) => (
+          {features.filter(feature => ["Keyword Tracking", "Subreddit Discovery", "Actionable Data"].includes(feature.title)).map((feature, i) => (
             <motion.div
               key={feature.title}
               initial={{ opacity: 0, y: 20 }}

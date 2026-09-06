@@ -1,3 +1,4 @@
+import { billingEnabled, functionError } from "@/lib/function-error";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
@@ -41,8 +42,8 @@ const SettingsPage = () => {
       });
       if (error) throw error;
       if (data?.url) window.open(data.url, "_blank");
-    } catch (err: any) {
-      toast({ title: "Checkout failed", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "Checkout failed", description: await functionError(err), variant: "destructive" });
     } finally {
       setCheckoutLoading(null);
     }
@@ -54,8 +55,8 @@ const SettingsPage = () => {
       const { data, error } = await supabase.functions.invoke("customer-portal");
       if (error) throw error;
       if (data?.url) window.open(data.url, "_blank");
-    } catch (err: any) {
-      toast({ title: "Portal error", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "Portal error", description: await functionError(err), variant: "destructive" });
     } finally {
       setPortalLoading(false);
     }
@@ -91,7 +92,7 @@ const SettingsPage = () => {
       </div>
 
       {/* Subscription */}
-      <div className="p-6 rounded-xl bg-card border border-border space-y-4">
+      {billingEnabled && <div className="p-6 rounded-xl bg-card border border-border space-y-4">
         <div className="flex items-center gap-2 mb-2">
           <CreditCard className="w-5 h-5 text-primary" />
           <h2 className="font-semibold">Subscription</h2>
@@ -143,7 +144,7 @@ const SettingsPage = () => {
             Refresh status
           </Button>
         </div>
-      </div>
+      </div>}
     </div>
   );
 };
