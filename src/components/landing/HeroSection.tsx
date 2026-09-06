@@ -40,29 +40,12 @@ const HeroSection = () => {
               </Link>
             </Button>
             <Button variant="hero-outline" size="lg" asChild className="text-base px-8 h-12">
-              <Link to="/dashboard">View Demo</Link>
+              <Link to="/dashboard">Open dashboard</Link>
             </Button>
           </div>
         </motion.div>
 
-        {/* Stats */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.3 }}
-          className="mt-20 grid grid-cols-3 gap-8 max-w-lg mx-auto"
-        >
-          {[
-            { value: "10K+", label: "Posts analyzed daily" },
-            { value: "500+", label: "Active users" },
-            { value: "50+", label: "Subreddits tracked" },
-          ].map((stat) => (
-            <div key={stat.label} className="text-center">
-              <div className="text-2xl font-bold text-foreground">{stat.value}</div>
-              <div className="text-xs text-muted-foreground mt-1">{stat.label}</div>
-            </div>
-          ))}
-        </motion.div>
+
       </div>
     </section>
   );

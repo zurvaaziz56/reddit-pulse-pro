@@ -1,3 +1,4 @@
+import { billingEnabled } from "@/lib/function-error";
 import { useAuth } from "@/contexts/AuthContext";
 import { useKeywords } from "@/hooks/use-dashboard-data";
 import { STRIPE_TIERS } from "@/lib/stripe-tiers";
@@ -16,7 +17,7 @@ const UsageBanner = () => {
   const atLimit = keywords.length >= tier.keywords;
   const nearLimit = usagePercent >= 80;
 
-  if (!nearLimit || plan === "agency") return null;
+  if (!billingEnabled || !nearLimit || plan === "agency") return null;
 
   return (
     <div className={`p-4 rounded-xl border ${atLimit ? "border-destructive/30 bg-destructive/5" : "border-warning/30 bg-warning/5"} flex flex-col sm:flex-row items-start sm:items-center gap-3`}>

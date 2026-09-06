@@ -1,120 +1,48 @@
-import { useState, useEffect } from "react";
-import { RefreshCw, Loader2, BarChart3, Tag, Brain, Zap } from "lucide-react";
+import { useState } from "react";
+import { RefreshCw, Loader2, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { useKeywords, useRedditPosts, useInsights } from "@/hooks/use-dashboard-data";
+import { useKeywords, useRedditPosts } from "@/hooks/use-dashboard-data";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { useSearchParams } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { Link } from "react-router-dom";
+import { functionError } from "@/lib/function-error";
 import TrendingPostsPanel from "@/components/dashboard/TrendingPostsPanel";
 import InsightsPanel from "@/components/dashboard/InsightsPanel";
-import SubredditChart from "@/components/dashboard/SubredditChart";
-import UsageBanner from "@/components/dashboard/UsageBanner";
 
 const DashboardHome = () => {
-  const [fetching, setFetching] = useState(false);
-  const [generating, setGenerating] = useState(false);
-  const { data: keywords = [] } = useKeywords();
-  const { data: posts = [] } = useRedditPosts();
-  const { data: insights = [] } = useInsights();
+  const [selected, setSelected] = useState<string>();
+  const [running, setRunning] = useState<string | null>(null);
+  const { data: keywords = [], isLoading, error } = useKeywords();
+  const keywordId = keywords.some(k => k.id === selected) ? selected : keywords[0]?.id;
+  const { data: posts = [] } = useRedditPosts(keywordId);
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const { refreshSubscription } = useAuth();
-
-  useEffect(() => {
-    const checkout = searchParams.get("checkout");
-    if (checkout === "success") {
-      toast({ title: "🎉 Subscription activated!", description: "Your plan has been upgraded successfully." });
-      refreshSubscription();
-      searchParams.delete("checkout");
-      setSearchParams(searchParams, { replace: true });
-    } else if (checkout === "cancelled") {
-      toast({ title: "Checkout cancelled", description: "No changes were made to your plan." });
-      searchParams.delete("checkout");
-      setSearchParams(searchParams, { replace: true });
-    }
-  }, []);
-
-  const handleFetchReddit = async () => {
-    setFetching(true);
+  async function run(name: "fetch-reddit" | "generate-insights") {
+    if (!keywordId || running) return;
+    setRunning(name);
     try {
-      const { data, error } = await supabase.functions.invoke("fetch-reddit");
+      const { data, error } = await supabase.functions.invoke(name, { body: { keywordId } });
       if (error) throw error;
-      toast({ title: "Reddit posts fetched", description: data?.message });
-      queryClient.invalidateQueries({ queryKey: ["reddit_posts"] });
-    } catch (e: any) {
-      toast({ title: "Fetch failed", description: e.message, variant: "destructive" });
-    }
-    setFetching(false);
-  };
-
-  const handleGenerateInsights = async () => {
-    setGenerating(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("generate-insights");
-      if (error) throw error;
-      toast({ title: "Insights generated", description: data?.message });
-      queryClient.invalidateQueries({ queryKey: ["insights"] });
-    } catch (e: any) {
-      toast({ title: "Generation failed", description: e.message, variant: "destructive" });
-    }
-    setGenerating(false);
-  };
-
-  return (
-    <div className="space-y-8 max-w-4xl">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold mb-1">Dashboard</h1>
-          <p className="text-muted-foreground text-sm">Your Reddit trend overview</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleFetchReddit} disabled={fetching || keywords.length === 0}>
-            {fetching ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-            Fetch Posts
-          </Button>
-          <Button variant="hero" size="sm" onClick={handleGenerateInsights} disabled={generating || posts.length === 0}>
-            {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
-            Generate Insights
-          </Button>
-        </div>
+      toast({ title: name === "fetch-reddit" ? "Reddit posts fetched" : "Insights generated", description: data.message });
+      await queryClient.invalidateQueries({ queryKey: [name === "fetch-reddit" ? "reddit_posts" : "insights"] });
+    } catch (error) { toast({ title: "Request failed", description: await functionError(error), variant: "destructive" }); }
+    finally { setRunning(null); }
+  }
+  return <div className="space-y-8 max-w-4xl">
+    <div><h1 className="text-2xl font-bold mb-1">Dashboard</h1><p className="text-muted-foreground text-sm">Your Reddit trend overview</p></div>
+    {isLoading ? <p role="status">Loading keywords…</p> : error ? <p role="alert">Could not load keywords. Please refresh.</p> : !keywords.length ?
+      <div className="p-6 border rounded-xl"><p>Add a keyword to start researching Reddit discussions.</p><Button asChild className="mt-4"><Link to="/dashboard/keywords">Add a keyword</Link></Button></div> : <>
+      <div className="flex flex-wrap gap-3 items-center">
+        <Select value={keywordId} onValueChange={setSelected} disabled={!!running}><SelectTrigger className="w-64" aria-label="Research keyword"><SelectValue /></SelectTrigger><SelectContent>{keywords.map(k => <SelectItem key={k.id} value={k.id}>{k.keyword}</SelectItem>)}</SelectContent></Select>
+        <Button variant="outline" onClick={() => run("fetch-reddit")} disabled={!!running}>{running === "fetch-reddit" ? <Loader2 className="animate-spin"/> : <RefreshCw/>}Fetch Posts</Button>
+        <Button onClick={() => run("generate-insights")} disabled={!!running || !posts.length}>{running === "generate-insights" ? <Loader2 className="animate-spin"/> : <Zap/>}Generate Insights</Button>
       </div>
-
-      <UsageBanner />
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard icon={Tag} label="Keywords" value={keywords.length} />
-        <StatCard icon={BarChart3} label="Posts Tracked" value={posts.length} />
-        <StatCard icon={Brain} label="Insights" value={insights.length} />
-        <StatCard icon={Zap} label="Subreddits" value={new Set(posts.map((p) => p.subreddit)).size} />
-      </div>
-
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <TrendingPostsPanel />
-        </div>
-        <div className="space-y-6">
-          <SubredditChart />
-        </div>
-      </div>
-
-      <InsightsPanel />
-    </div>
-  );
+      <p className="text-sm text-muted-foreground">Searches up to 25 recent posts from the past month. Analysis uses post text, not comment text.</p>
+      {running && <p role="status" className="text-sm">{running === "fetch-reddit" ? "Fetching posts…" : "Analyzing posts… This may take a minute."}</p>}
+      <TrendingPostsPanel keywordId={keywordId}/><InsightsPanel keywordId={keywordId}/>
+    </>}
+  </div>;
 };
-
-const StatCard = ({ icon: Icon, label, value }: { icon: any; label: string; value: number }) => (
-  <div className="p-4 rounded-xl bg-card border border-border">
-    <div className="flex items-center gap-2 text-muted-foreground mb-1">
-      <Icon className="w-4 h-4" />
-      <span className="text-xs">{label}</span>
-    </div>
-    <p className="text-2xl font-bold">{value}</p>
-  </div>
-);
-
 export default DashboardHome;

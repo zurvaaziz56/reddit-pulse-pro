@@ -1,3 +1,7 @@
+# Functional preview
+
+See [deployment instructions](docs/DEPLOYMENT.md) and [change notes](docs/CHANGE_NOTES.md). This branch repairs the original app for staging; live Reddit access is not yet verified. Billing is disabled by default.
+
 # Reddit Trend Radar
 
 Build a SaaS web app called "Reddit Trend Radar".

@@ -4,12 +4,13 @@ import type { Database } from './types';
 import { brokeredPreviewStorage } from './previewAuthStorage';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+export const isConfigured = Boolean(SUPABASE_URL && import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+export const supabase = createClient<Database>(SUPABASE_URL || "http://127.0.0.1:54321", SUPABASE_PUBLISHABLE_KEY || "unconfigured", {
   auth: {
     storage: brokeredPreviewStorage(),
     persistSession: true,

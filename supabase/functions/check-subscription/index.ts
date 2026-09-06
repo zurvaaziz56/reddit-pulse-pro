@@ -1,96 +1,24 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
-import { createClient } from "npm:@supabase/supabase-js@2.57.2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
-
-const PRODUCT_TO_PLAN: Record<string, string> = {
-  "prod_U734C5235S8I6z": "starter",
-  "prod_U737H3gpSP3wsa": "pro",
-  "prod_U737EsyAsaBfJ0": "agency",
-};
-
-const logStep = (step: string, details?: any) => {
-  console.log(`[CHECK-SUBSCRIPTION] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
-};
-
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  const supabaseClient = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-    { auth: { persistSession: false } }
-  );
-
-  try {
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
-
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header");
-
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Auth error: ${userError.message}`);
-    const user = userData.user;
-    if (!user?.email) throw new Error("Not authenticated");
-    logStep("User authenticated", { userId: user.id, email: user.email });
-
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+import { authenticate, endpoint, json } from "../_shared/http.ts";
+import { stripeClient, prices } from "../_shared/billing.ts";
+export const handler = endpoint(async req => {
+  const { db, user } = await authenticate(req);
+  let plan = "starter";
+  let subscribed = false;
+  let subscription_end: string | null = null;
+  if (Deno.env.get("ENABLE_BILLING") === "true" && user.email) {
+    const stripe = stripeClient();
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-
-    if (customers.data.length === 0) {
-      logStep("No Stripe customer found");
-      return new Response(JSON.stringify({ subscribed: false, plan: "starter" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if (customers.data[0]) {
+      const subscriptions = await stripe.subscriptions.list({ customer: customers.data[0].id, status: "active", limit: 100 });
+      for (const subscription of subscriptions.data) {
+        const item = subscription.items.data[0];
+        const match = Object.entries(prices).find(([, id]) => id === item?.price.id);
+        if (match) { plan = match[0]; subscribed = true; subscription_end = new Date(item.current_period_end * 1000).toISOString(); break; }
+      }
     }
-
-    const customerId = customers.data[0].id;
-    logStep("Found customer", { customerId });
-
-    const subscriptions = await stripe.subscriptions.list({
-      customer: customerId,
-      status: "active",
-      limit: 1,
-    });
-
-    if (subscriptions.data.length === 0) {
-      logStep("No active subscription");
-      // Sync plan to starter
-      await supabaseClient.from("profiles").update({ plan: "starter" }).eq("user_id", user.id);
-      return new Response(JSON.stringify({ subscribed: false, plan: "starter" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const subscription = subscriptions.data[0];
-    const productId = subscription.items.data[0].price.product as string;
-    const plan = PRODUCT_TO_PLAN[productId] || "starter";
-    const subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
-    logStep("Active subscription", { plan, productId, subscriptionEnd });
-
-    // Sync plan to profiles
-    await supabaseClient.from("profiles").update({ plan }).eq("user_id", user.id);
-
-    return new Response(JSON.stringify({
-      subscribed: true,
-      plan,
-      subscription_end: subscriptionEnd,
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  } catch (error) {
-    logStep("ERROR", { message: error.message });
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
   }
+  const { error } = await db.from("profiles").update({ plan }).eq("user_id", user.id);
+  if (error) throw error;
+  return json({ plan, subscribed, subscription_end });
 });
+if (import.meta.main) Deno.serve(handler);

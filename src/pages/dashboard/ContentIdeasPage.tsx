@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 const ContentIdeasPage = () => {
   const [keywordId, setKeywordId] = useState<string>();
   const { data: keywords = [] } = useKeywords();
-  const { data: insights, isLoading } = useInsights("content_idea", keywordId);
+  const { data: insights, isLoading, error } = useInsights("content_idea", keywordId);
   const hasData = insights && insights.length > 0;
 
   return (
@@ -31,7 +31,7 @@ const ContentIdeasPage = () => {
         )}
       </div>
 
-      {isLoading ? (
+      {error ? <p role="alert">Could not load content ideas. Please refresh.</p> : isLoading ? (
         <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
       ) : !hasData ? (
         <div className="text-center py-12 text-muted-foreground text-sm">
@@ -44,7 +44,7 @@ const ContentIdeasPage = () => {
               <Lightbulb className="w-4 h-4 text-warning flex-shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-medium">{idea.content}</p>
-                <span className="text-xs text-muted-foreground mt-1 block">{(idea as any).keywords?.keyword}</span>
+                <span className="text-xs text-muted-foreground mt-1 block">{idea.keywords?.keyword}</span>
               </div>
             </div>
           ))}

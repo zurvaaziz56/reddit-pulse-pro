@@ -17,6 +17,7 @@ export type Database = {
       insights: {
         Row: {
           content: string
+          source_urls: string[]
           generated_at: string
           id: string
           keyword_id: string
@@ -24,6 +25,7 @@ export type Database = {
         }
         Insert: {
           content: string
+          source_urls?: string[]
           generated_at?: string
           id?: string
           keyword_id: string
@@ -31,6 +33,7 @@ export type Database = {
         }
         Update: {
           content?: string
+          source_urls?: string[]
           generated_at?: string
           id?: string
           keyword_id?: string
@@ -96,6 +99,7 @@ export type Database = {
       }
       reddit_posts: {
         Row: {
+          body: string
           author: string | null
           created_utc: string
           fetched_at: string
@@ -109,6 +113,7 @@ export type Database = {
           url: string
         }
         Insert: {
+          body?: string
           author?: string | null
           created_utc: string
           fetched_at?: string
@@ -122,6 +127,7 @@ export type Database = {
           url: string
         }
         Update: {
+          body?: string
           author?: string | null
           created_utc?: string
           fetched_at?: string
