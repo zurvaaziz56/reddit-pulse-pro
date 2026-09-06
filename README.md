@@ -1,73 +1,142 @@
-# Welcome to your Lovable project
+# Reddit Trend Radar
 
-## Project info
+Build a SaaS web app called "Reddit Trend Radar".
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+The app helps founders, marketers, and creators discover trending discussions and customer pain points from Reddit.
 
-## How can I edit this code?
+Users can enter keywords and the system scans Reddit posts and comments to identify trends.
 
-There are several ways of editing your application.
+Features:
 
-**Use Lovable**
+1. Authentication
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+Users can sign up and log in.
 
-Changes made via Lovable will be committed automatically to this repo.
+2. Keyword Tracking
 
-**Use your preferred IDE**
+Users can add keywords they want to monitor.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+Examples:
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+AI writing tools
 
-Follow these steps:
+Shopify apps
+
+protein supplements
+
+remote jobs
+
+3. Reddit Data Fetch
+
+Use Reddit API to fetch posts from relevant subreddits based on keywords.
+
+Store:
+
+post title
+
+subreddit
+
+upvotes
+
+comments
+
+link
+
+timestamp
+
+4. Trending Posts
+
+Show dashboard with:
+
+most upvoted posts
+
+most commented posts
+
+fastest growing posts
+
+5. AI Insights
+
+Use AI to analyze posts and generate:
+
+top trends
+
+customer pain points
+
+opportunity ideas
+
+Display results in simple bullet points.
+
+6. Subreddit Discovery
+
+Show which subreddits discuss the topic most.
+
+7. Daily Digest
+
+Generate a daily email summarizing:
+
+top discussions
+
+trending ideas
+
+pain points
+
+8. Dashboard UI
+
+Clean simple UI with sections:
+
+Trending Posts
+
+AI Insights
+
+Pain Points
+
+Opportunities
+
+9. Pricing Plans
+
+Starter
+
+3 keywords
+
+Pro
+
+10 keywords
+
+Agency
+
+50 keywords
+
+10. Stripe payments
+
+Design:
+
+minimal modern SaaS UI
+
+clean dashboard
+
+data cards and charts
+
+Make the system scalable and easy to extend later.
+
+This project was built with [Lovable](https://lovable.dev).
+
+**Live app**: https://reddit-pulse-pro.lovable.app
+
+## Build with Lovable
+
+Continue developing this project in the [Lovable editor](https://lovable.dev/projects/f7e741d0-521f-4dd4-90f7-60e4ae998781).
+
+- **Ship faster**: describe what you want to build and Lovable handles the code.
+- **Stay in sync**: every change made in Lovable is committed straight to this repository.
+- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+
+## Development
+
+Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
+git clone <this-repository-url>
+cd <repository-name>
 npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
