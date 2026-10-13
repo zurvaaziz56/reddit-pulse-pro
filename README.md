@@ -118,17 +118,8 @@ data cards and charts
 
 Make the system scalable and easy to extend later.
 
-This project was built with [Lovable](https://lovable.dev).
 
 **Live app**: https://reddit-pulse-pro.lovable.app
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/f7e741d0-521f-4dd4-90f7-60e4ae998781).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
 
 ## Development
 
